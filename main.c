@@ -5,7 +5,14 @@
 
 #define MAX_PLAYERS 2
 #define MAX_MONSTERS 100
-
+struct item {
+  char *name;
+  char *type;
+  int attack_bonus;
+  int defense_bonus;
+  int health_bonus;
+  int chance;
+};
 // Estruturas de dados
 struct player
 {
@@ -26,6 +33,7 @@ struct monster
   int attack;
   int defense;
   int level;
+  struct item *drop;
 };
 
 // Funções
@@ -45,15 +53,31 @@ enum attack_type {
   ATTACK_TYPE_ICE,
 };
 
+// Função para gerar um drop para um monstro
+
+struct item *generate_monster_drop(struct monster *monster)
+{
+  // Gera um número aleatório entre 0 e 100
+  int chance = rand() % 100;
+
+  // Verifica se o monstro tem um drop
+  if (monster->drop == NULL)
+  {
+    return NULL;
+  }
+
+  // Verifica se o monstro dropa um item
+  if (chance < monster->drop->chance)
+  {
+    return monster->drop;
+  }
+
+  // Retorna NULL
+  return NULL;
+}
 // Tabela de itens
 
-struct item {
-  char *name;
-  char *type;
-  int attack_bonus;
-  int defense_bonus;
-  int health_bonus;
-};
+
 
 // Tabela de itens
 
@@ -105,7 +129,8 @@ void equip_item(struct player *player, struct item *item, int slot)
     free(current_item);
   }
 }
-
+// declaraçao
+void print_menu();
 
 // Função `drop_item()`
 void drop_item(struct player *player, struct item *item) {
@@ -198,8 +223,7 @@ int main()
     // O jogador escolhe uma ação
     char action[100];
     int monster_index;
-    void print_menu()
-    {
+    void print_menu() {
       // Imprime uma lista de opções para o jogador escolher
       printf("O que você gostaria de fazer?\n");
       printf("1. Iniciar uma batalha\n");
@@ -221,15 +245,20 @@ int main()
           // Sair do jogo
           exit(0);
           break;
-        default:
-          printf("Opção inválida.\n");
-           }
-    }
+        }
     // Passa para o próximo jogador
     player_index = (player_index + 1) % MAX_PLAYERS;
+    }
   }
-  return 0;
 }
+
+// tipos de ataque
+
+enum attack_type {
+  ATTACK_TYPE_PHYSICAL,
+  ATTACK_TYPE_FIRE,
+  ATTACK_TYPE_ICE,
+};
 
 // Funções auxiliares
 void generate_players(struct player *players, int num_players)
@@ -263,8 +292,6 @@ void generate_monsters(struct monster *monsters, int num_monsters)
       "Troll",
       "Dragão",
       "gnomo de jardim",
-      "nariz de nandinho",
-      "mini nariz",
       "lobo feroz"
       
       };
@@ -283,6 +310,47 @@ void generate_monsters(struct monster *monsters, int num_monsters)
   }
 }
 
+struct terrain {
+  char *name;
+  int attack_bonus;
+  int defense_bonus;
+};
+
+// Função para gerar um **microambiente** aleatório
+struct terrain *generate_terrain()
+{
+  // Gera um número aleatório entre 0 e 2
+  int terrain_type = rand() % 3;
+
+  // Retorna o **microambiente**
+  switch (terrain_type)
+  {
+    case 0: return generate_grass();
+    case 1: return generate_water();
+    case 2: return generate_mountain();
+  }
+}
+
+// Função para calcular o dano causado por um ataque
+int calculate_damage(struct player *player, struct monster *monster, struct attack *attack)
+{
+  // Calcula o dano base
+  int damage = attack->damage;
+
+  // Aplica o bônus de ataque do jogador
+  damage += player->attack;
+
+  // Aplica o bônus de defesa do monstro
+  damage -= monster->defense;
+
+  // Aplica o bônus de **microambiente**
+  damage += terrain->attack_bonus;
+  damage -= terrain->defense_bonus;
+
+  return damage;
+}
+
+
 void battle(struct player *player, struct monster *monster)
 {
   // Imprime os status do jogador e do monstro
@@ -290,38 +358,24 @@ void battle(struct player *player, struct monster *monster)
   print_stats_player(player);
   print_stats_monster(monster);
 
-  // O jogador ataca primeiro
-  int player_damage = player->attack - monster->defense;
-
-  // O jogador escolhe um ataque
-  int attack_index;
-  printf("Escolha um ataque (0-4): ");
-  scanf("%d", &attack_index);
-
-  // Aplica o ataque escolhido
-  player_damage += player->attacks[attack_index];
-
-  // O monstro recebe o dano
+  // Gera o **microambiente** da batalha
+  struct terrain *terrain = generate_terrain();
+  
+  // Calcula o dano causado por cada ataque
+  int player_damage = calculate_damage(player, monster, player->attacks[attack_index]);
+  
+  int monster_damage = calculate_damage(monster, player, monster->attacks[rand() % monster->attacks_count]);
+  
+  // Aplica o dano aos oponentes
   monster->health -= player_damage;
-
-  // Se o monstro morrer, o jogador ganha
+  player->health -= monster_damage;
+  
+  // Verifica se algum oponente foi derrotado
   if (monster->health <= 0)
   {
     printf("Você derrotou o monstro!\n");
     return;
   }
-
-  // O monstro ataca o jogador
-  int monster_damage = monster->attack - player->defense;
-
-  // O jogador defende
-  int damage_reduction = rand() % 10 + 1;
-  monster_damage -= damage_reduction;
-
-  // O jogador recebe o dano
-  player->health -= monster_damage;
-
-  // Se o jogador morrer, o jogo termina
   if (player->health <= 0)
   {
     printf("Você foi derrotado!\n");
