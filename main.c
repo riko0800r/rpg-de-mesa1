@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+
 
 #include "bibliotecas/rikos.h"
 
@@ -19,7 +19,7 @@ struct window *create_window(int width, int height, char *title) {
 
   // Obtém o contexto de dispositivo da janela
   HDC hdc = GetDC(handle);
-
+  
   // Retorna a estrutura da janela
   struct window *window = malloc(sizeof(struct window));
   window->handle = handle;
