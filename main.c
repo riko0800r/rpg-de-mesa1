@@ -92,8 +92,10 @@ int main(){
   // Cria uma janela.
   struct window *window = create_window(640, 480, "Meu RPG");
 
-  // Desenha na janela.
-  draw_in_window(window, 100, 100, "Olá, mundo!");
-
+  while(1){
+    draw_player(window,player);
+    
+    move_player(player,window);
+  }
   return 0;
 }
