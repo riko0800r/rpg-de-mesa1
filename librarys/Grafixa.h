@@ -1,8 +1,32 @@
+#ifndef GRAFIXA_H
+#define GRAFIXA_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <stdarg.h>
+#include <unistd.h>
+#include <string.h>
+#include <time.h>
+#include <math.h>
+#include <locale.h>
+
+#include <windows.h>
+
+double PI = 3.14;
+
+typedef struct tagRECT {
+  long left;
+  long top;
+  long right;
+  long bottom;
+} RECT;
+
 struct player(){
 	int x = 0;
 	int y = 0;
-	int width  = 2;
-	int height = 1;
+	int width  = 100;
+	int height = 50;
 	int speed  = 2;
 	int score  = 0;
 	int lives  = 6;
@@ -14,82 +38,85 @@ struct player(){
 	int health_max = 100;
 };
 
-int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-	WNDCLASS wc;
-	HWND hwnd;
-	MSG msg;
+int G_DrawerRect(HWND hwnd,hDC hdc){
+	 // Define as dimensões do quadrado
+  RECT rect = {10, 10, 100, 100};
 
-	wc.cbSize = sizeof(WNDCLASS);
-	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = DefWindowProc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = hInstance;
-	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	wc.lpszMenuName = NULL;
-	wc.lpszClassName = "GrafixaTesteV1";
+  // Define a cor do quadrado
+  COLORREF color = RGB(0, 255, 0);
 
-	if (!RegisterClass(&wc))
-	{
-		MessageBox(NULL, "Erro na registração da janela", "Erro!", MB_ICONEXCLAMATION | MB_OK);
-		return 0;
-	}
-	hwnd = CreateWindow("GrafixaTesteV1", "Grafixa Teste V1", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 
-	CW_USEDEFAULT, 640, 480, NULL, NULL, hInstance, NULL);
+  // Desenha o quadrado
+  FillRect(hDC, &rect, color);
 
-	if(!hwnd){
-		MessageBox(NULL, "Erro na criaçao da janela", "Erro!", MB_ICONEXCLAMATION | MB_OK);
-		return 0;
-	}
+  // Libera o contexto de dispositivo
+  ReleaseDC(hwnd, hDC);
 
-	ShowWindow(hwnd, nCmdShow);
-	UpdateWindow(hwnd);
-	while (GetMessage(&msg, NULL, 0, 0) > 0){
-		translateMessage(&msg);
-		DispatchMessage(&msg);
-	}
-	return msg.wParam;
+  return 0;
 }
 
-float G_DrTriangle(float b, float h, char a)
-{
-	float area = b * h / 2;
-	int linha = 0;
-	int coluna = 0;
-	for (linha; linha <= area; linha++)
-	{
-		for (coluna; coluna <= linha / h; coluna++)
-		{
-			if (coluna <= area)
-			{
-				printf("\n");
-			}
-		}
-		printf("%c", a);
-	}
-	return area;
+// Função para carregar uma imagem de todos os tipos
+IMAGE *LoadImageAllTypes(LPCTSTR lpFileName) {
+  // Abre o arquivo de imagem
+  HANDLE hFile = CreateFile(lpFileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+  if (hFile == INVALID_HANDLE_VALUE) {
+    return NULL;
+  }
+
+  // Obtém o tamanho do arquivo
+  DWORD dwFileSize = GetFileSize(hFile, NULL);
+
+  // Aloca memória para a imagem
+  LPVOID lpImage = malloc(dwFileSize);
+  if (lpImage == NULL) {
+    CloseHandle(hFile);
+    return NULL;
+  }
+
+  // Lê o arquivo de imagem para a memória
+  DWORD dwBytesRead = 0;
+  ReadFile(hFile, lpImage, dwFileSize, &dwBytesRead, NULL);
+  CloseHandle(hFile);
+
+  // Cria uma imagem a partir da memória
+  IMAGE *pImage = ImageFromStream((BYTE *)lpImage, dwBytesRead);
+  if (pImage == NULL) {
+    free(lpImage);
+    return NULL;
+  }
+
+  // Libera a memória da imagem
+  free(lpImage);
+
+  // Retorna a imagem
+  return pImage;
 }
 
-float G_DrRect(float b, float h, char a)
-{
-	float area = b * h - 1;
-	int x1 = 0;
-	int y1 = 0;
-	for (x1; x1 <= area; x1++)
-	{
-		for (y1; y1 <= x1 / b; y1++)
-		{
-			if (y1 <= area)
-			{
-				printf("\n");
-			}
-		}
-		printf("%c", a);
-	}
-	return area;
+// Cria uma função para atualizar a posição do quadrado
+  void G_UpdatePositionPlayer(struct tagRECT* rect, HWND hwnd, HDC hdc) {
+    // Verifica se a tecla W foi pressionada
+    if (GetKeyState(VK_W) & 0x8000) {
+      y--;
+    }
+
+    // Verifica se a tecla A foi pressionada
+    if (GetKeyState(VK_A) & 0x8000) {
+      x--;
+    }
+
+    // Verifica se a tecla S foi pressionada
+    if (GetKeyState(VK_S) & 0x8000) {
+      y++;
+    }
+
+    // Verifica se a tecla D foi pressionada
+    if (GetKeyState(VK_D) & 0x8000) {
+      x++;
+    }
+
+    // Atualiza a posição do quadrado
+    rect.top = y;
+    rect.left = x;
+    G_DrawerRect(hwnd,hdc,hbr);
 }
 
 float G_CaQuad(float L)
