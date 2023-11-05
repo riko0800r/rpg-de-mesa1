@@ -1,14 +1,14 @@
-// Grafixa.c
-
-#pragma once
 #include "Grafixa.h"
 
-int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow,struct RECT* rect)
+
+// funçao principal
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	WNDCLASS wc;
 	HWND hwnd;
 	MSG msg;
 	HDC hdc;
+	HBRUSH hbr;
 
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = DefWindowProc;
@@ -35,16 +35,15 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
 	}
 
 	ShowWindow(hwnd, nCmdShow);
-	G_UpdatePositionPlayer(&rect, hwnd, hdc);
 	UpdateWindow(hwnd);
-
+	LPCRECT rect;
 	while (GetMessage(&msg, NULL, 0, 0) > 0){
 		TranslateMessage(&msg);
+		// Desenha o quadrado
+		FillRect(hdc,rect,hbr);
+		// Libera o contexto de dispositivo
+		ReleaseDC(hwnd, hdc);
 		DispatchMessage(&msg);
 	}
 	return msg.wParam;
-}
-int main(){
-	
-    return 0;
 }
